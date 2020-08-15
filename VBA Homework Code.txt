@@ -1,0 +1,114 @@
+Sub Stock_Analysis()
+Dim WS As Worksheet
+    For Each WS In Worksheets
+    WS.Activate
+    
+        ' Add Heading for summary
+        Cells(1, "I").Value = "Ticker"
+        Cells(1, "J").Value = "Yearly Change"
+        Cells(1, "K").Value = "Percent Change"
+        Cells(1, "L").Value = "Total Stock Volume"
+        Cells(2, "N").Value = "Greatest % Increase"
+        Cells(3, "N").Value = "Greatest % Decrease"
+        Cells(4, "N").Value = "Greatest Total Volume"
+        Cells(1, "O").Value = "Ticker"
+        Cells(1, "P").Value = "Value"
+
+        'Create Variable to hold Value
+        Dim Open_Price As Double
+        Dim Close_Price As Double
+        Dim Yearly_Change As Double
+        Dim Ticker_Name As String
+        Dim Percent_Change As Double
+        Dim Volume As Double
+        Volume = 0
+        Dim Count As Double
+        Count = 2
+        Dim i As Long
+
+        ' Determine the Last Row
+        LastRow = WS.Cells(Rows.Count, 1).End(xlUp).Row
+        Open_Price = WS.Cells(2, 3).Value
+         ' Loop through all ticker symbol
+        
+        For i = 2 To LastRow
+        'Declare Volume
+        Volume = Volume + WS.Cells(i, 7).Value
+         ' Check if we are still within the same ticker symbol, if it is not...
+            If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+                ' Set Ticker name
+                Ticker_Name = WS.Cells(i, 1).Value
+                'Print the Ticker Name
+                WS.Range("I" & Count) = Ticker_Name
+                'Set Open Price
+ '               Open_Price = WS.Cells(i, 3).Value
+                ' Set Close Price
+                Close_Price = WS.Cells(i, 6).Value
+                ' Add Yearly Change
+                Yearly_Change = Close_Price - Open_Price
+                WS.Range("J" & Count).Value = Yearly_Change
+                ' Add Percent Change
+                If Open_Price = 0 Then
+                    Percent_Change = 0
+                Else
+                    Percent_Change = Yearly_Change / Open_Price
+                    WS.Range("K" & Count).Value = Percent_Change
+                    WS.Range("K" & Count).Style = "Percent"
+                End If
+                'Print Total Stock Volume
+                WS.Range("L" & Count).Value = Volume
+                'Reset Stock Volume for Next Stock
+                Volume = 0
+                'Reset Open Price for next Stock
+                Open_Price = WS.Cells(i + 1, 3).Value
+                'Conditional Formatting
+                If Yearly_Change < 0 Then
+                    WS.Range("J" & Count).Interior.ColorIndex = 3
+                Else
+                    WS.Range("J" & Count).Interior.ColorIndex = 4
+                End If
+            Count = Count + 1
+            End If
+        Next i
+
+        ' Locate stock with the "Greatest % increase", "Greatest % Decrease"
+        ' and "Greatest total volume"
+        ' Count the number of row in the Summary Table
+        Dim n As Integer
+        Dim Max_Increase As Double
+        Dim Min_Decrease As Double
+        Dim Max_Volume As Double
+        Max_Increase = 0
+        Min_Decrease = 0
+        Max_Volume = 0
+
+        n = WS.Cells(Rows.Count, 10).End(xlUp).Row
+
+        For j = 2 To n
+            
+            If Range("K" & j).Value > Max_Increase Then
+                Max_Increase = WS.Range("K" & j).Value
+                WS.Range("P2").Value = Max_Increase
+                WS.Range("O2").Value = WS.Range("I" & j).Value
+                        
+            ElseIf Range("K" & j).Value < Min_Decrease Then
+                Min_Decrease = WS.Range("K" & j).Value
+                WS.Range("P3").Value = Min_Decrease
+                WS.Range("O3").Value = WS.Range("I" & j).Value
+
+            End If
+            
+            If Range("L" & j).Value > Max_Volume Then
+                Max_Volume = WS.Range("L" & j).Value
+                WS.Range("P4").Value = Max_Volume
+                WS.Range("O4").Value = WS.Range("I" & j).Value
+            
+            End If
+            
+            WS.Range("P2:P3").NumberFormat = "0.00%"
+            WS.Range("P:P").EntireColumn.AutoFit
+            
+        Next j
+       
+    Next WS
+End Sub
